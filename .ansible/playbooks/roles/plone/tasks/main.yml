@@ -35,7 +35,6 @@
   with_items: "{{cops_plone_registries}}"
 - shell: |
     set -ex
-    falsd
     cd "{{cops_plone_dir}}"
     {{cops_plone_dc}} build {{cops_plone_build_args}}
   when:
