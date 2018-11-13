@@ -1,0 +1,12 @@
+---
+# APP
+- hosts: "{{plone_servers|default('all')}}"
+  roles: [corpusops.roles/ansible_plugins]
+  tasks:
+  - when: ["cops_plone_lifecycle_app|default(true)"]
+    tags: ["cops_plone_lifecycle_app"]
+    include_role: {name: plone_vars, allow_duplicates: false}
+  - when: ["cops_plone_lifecycle_app"]
+    tags: ["cops_plone_lifecycle_app"]
+    block:
+    - include_role: {name: plone,    allow_duplicates: false}

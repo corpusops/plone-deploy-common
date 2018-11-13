@@ -1,0 +1,119 @@
+---
+cops_plone_name: ploneinstance
+cops_plone_project_module_name: "{{cops_plone_name}}"
+cops_plone_settings_module: "{{cops_plone_project_module_name}}.settings.instances.{{cops_plone_deploy_env}}"
+cops_plone_py_ver: "3.7"
+cops_plone_deploy_env: "dev"
+cops_plone_docker_image_tag: "{{cops_plone_name}}"
+cops_plone_default_docker_tag: "latest"
+cops_plone_docker_tag: "{{cops_plone_default_docker_tag}}"
+cops_plone_tld_domain: example.com
+cops_plone_mail_domain: "{{ cops_plone_tld_domain }}"
+cops_plone_default_gitref: "master"
+cops_plone_gitref: "{{cops_plone_default_gitref}}"
+cops_plone_dir: "/srv/docker/{{cops_plone_name}}"
+cops_plone_hostname: "{{cops_plone_deploy_env}}-{{cops_plone_name}}.{{cops_plone_tld_domain}}"
+cops_plone_alternate_hostnames: [".{{cops_plone_tld_domain}}"]
+cops_plone_gateway: "{{ ansible_default_ipv4.address}}"
+cops_plone_composename: "{{cops_plone_name}}"
+cops_plone_devmode: False
+cops_plone_build_args: "--no-cache plone zeo"
+cops_plone_site_path: /Plone
+cops_plone_admin_user: plone
+cops_plone_admin_pasword: admin5456+q7sdf8
+cops_plone_backup_zeopack_keep: 2
+cops_plone_backup_backups_keep: 2
+cops_plone_backup_snapshotbackups_keep: 2
+cops_plone_backup_pack_days: 30
+cops_plone_backup_periodic_restart: 1
+cops_plone_mailcatcher_user: mailcatcher
+cops_plone_mailcatcher_password: mailcatcher
+cops_plone_rotate: "31"
+cops_plone_sentry_dsn: ""
+cops_plone_sentry_zopeloglevel: INFO
+cops_plone_sentry_level: error
+cops_plone_docker_dir: /code
+# backup could be remove in a-while when we have redeployed it everywhere
+cops_plone_restarted_services_default: "zeo plone traefik nginx"
+cops_plone_restarted_services: "{{cops_plone_restarted_services_default}}"
+cops_plone_purge_volumes: [statics]
+cops_plone_sshargs: >-
+  {% set k = hostvars[inventory_hostname].get(
+                'ansible_ssh_private_key_file', '') %}
+  {% if k%}-o IdentityFile={{k}} -o IdentitiesOnly=yes{%endif%}
+  {% if (
+      hostvars[inventory_hostname].ansible_connection|default('ssh')
+     ) not in [ 'smart', 'local'] %}
+  {{ hostvars[inventory_hostname].ssh_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_common_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_extra_args | default('') }}
+  {% endif %}
+cops_plone_build: false
+cops_plone_pull: true
+cops_plone_registries: []
+#- {registry: registry.foo.net, username: foo, password: bar}
+cops_plone_compose_files: [docker-compose.yml, docker-compose-prod.yml]
+cops_plone_dc:
+  docker-compose {% for i in cops_plone_compose_files %} -f {{i}}{% endfor %}
+  -p "{{cops_plone_composename}}"
+cops_plone_http_protect_password: ''
+cops_plone_docker_env_freeform: |-
+  {{ cops_plone_docker_env_defaults}}
+  {{ cops_plone_docker_env_extra}}
+# free form for params inside dockerenv
+cops_plone_sentry_project: "{{cops_plone_name}}"
+cops_plone_sentry_release: "{{cops_plone_gitref}}"
+cops_plone_sentry_environment: "{{cops_plone_deploy_env}}"
+cops_plone_docker_env_defaults: |-
+  PROJECT_DIR={{cops_plone_docker_dir}}/
+  PLONE__SITE_PATH={{cops_plone_site_path}}
+  PLONE__USER={{cops_plone_admin_user}}
+  PLONE__ADMIN_PASSWORD={{cops_plone_admin_pasword}}
+  PLONE__ZEO_PACK_KEEP_OLD={{cops_plone_backup_zeopack_keep}}
+  PLONE__HTTP_PROTECT_PASSWORD={{cops_plone_http_protect_password}}
+  PLONE__BACKUPS_KEEP={{cops_plone_backup_backups_keep}}
+  PLONE__SNAPSHOTBACKUPS_KEEP={{cops_plone_backup_snapshotbackups_keep}}
+  PLONE__PACK_DAYS={{cops_plone_backup_pack_days}}
+  PLONE__PERIODIC_RESTART={{cops_plone_backup_periodic_restart}}
+  # This need to be changed in production
+  PLONE__ROTATE={{cops_plone_rotate}}
+  PLONE__DEPLOY_ENV={{cops_plone_deploy_env}}
+  {% if cops_plone_sentry_dsn %}
+  PLONE__SENTRY_DSN={{cops_plone_sentry_dsn}}
+  PLONE__SENTRY_ZOPELOGLEVEL={{cops_plone_sentry_zopeloglevel}}
+  PLONE__SENTRY_LEVEL={{cops_plone_sentry_level}}
+  PLONE__SENTRY_PROJECT={{cops_plone_sentry_project}}
+  PLONE__SENTRY_RELEASE={{cops_plone_sentry_release}}
+  PLONE__SENTRY_ENVIRONMENT={{cops_plone_sentry_environment}}
+  {% endif %}
+  # FreeForm params from ansible inventory
+  MAILCATCHER_USER={{cops_plone_mailcatcher_user}}
+  MAILCATCHER_PASSWORD={{cops_plone_mailcatcher_password}}
+  {{ cops_plone_docker_env_extra}}
+cops_plone_dotenv: |-
+  APP_TYPE=plone
+  PLONE_PY_VER={{ cops_plone_py_ver }}
+  PLONE_NAME={{ cops_plone_name }}
+  COMPOSE_PROJECT_NAME={{cops_plone_composename}}
+  CI_COMMIT_SHA={{cops_plone_gitref}}
+  PLONE_IMAGE={{ cops_plone_docker_image }}
+  PLONE_IMAGE_VERSION={{cops_plone_docker_tag}}
+#
+cops_plone_dotenv_extra: ""
+# free form for params inside dockerenv
+cops_plone_docker_env_extra: ""
+# free form for params inside local.py
+cops_plone_localpy_extra: ""
+# Normally playbook is in ./.ansible/playbooks
+cops_plone_code_dir: "{{playbook_dir}}/../.."
+cops_plone_code_rsync_opts: [
+    "-azv",
+    # include deploy projects base code
+    "--include", "local/*-deploy",
+    "--exclude", ".ansible",
+    "--exclude", "local/*",
+    "--exclude", ".git",
+    "--exclude", ".tox",
+    "--exclude", ".env",
+    "--exclude", "docker.env"]
