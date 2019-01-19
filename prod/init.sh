@@ -37,7 +37,7 @@ done
 export APP_GROUP="$APP_USER"
 SHELL_USER=${SHELL_USER:-${APP_USER}}
 export DATA_DIR="${PLONE__DATA_DIR:-/data}"
-export USER_DIRS=". www $DATA_DIR $(find $DATA_DIR -maxdepth 3 -type d) $DATA_DIR/backups"
+export USER_DIRS=". www $DATA_DIR $(find $DATA_DIR -maxdepth 3 -type d) $DATA_DIR/backup"
 export PLONE__ADMIN="${PLONE__ADMIN:-admin}"
 export PLONE__ADMIN_PASSWORD="${PLONE__ADMIN_PASSWORD-}"
 export PLONE__PACK_DAYS="${PLONE__PACK_DAYS-}"
@@ -76,7 +76,15 @@ fi
 while read f;do regen_egg_info "$f";done < <( \
   find "$TOPDIR/setup.py" "$TOPDIR/src" "$TOPDIR/lib" \
     -name setup.py -type f -maxdepth 2 -mindepth 0; )
-# install logrotate & cron files from templates
+# install wtih frep any template file to / (eg: logrotate & cron file)
+for i in $(find etc/ -name "*.frep" -type f 2>/dev/null);do
+    d="$(dirname "$i")/$(basename "$i" .frep)" \
+        && di="/$(dirname $d)" \
+        && if [ ! -e "$di" ];then mkdir -pv "$di";fi \
+        && echo "Generating with frep $i:$d" >&2 \
+        && frep "$i:/$d" --overwrite
+done
+# install wtih envsubst any template file to / (eg: logrotate & cron file)
 for i in $(find etc -name "*.envsubst" -type f 2>/dev/null);do
     di="/$(dirname $i)" \
         && if [ ! -e "$di" ];then mkdir -pv "$di";fi \
@@ -203,8 +211,6 @@ fi
 fixperms
 if [[ -z "$@" ]]; then
     if [[ "$PROCESSES_SUPERVISOR" == "supervisord" ]];then
-        export SUPERVISORD_LOGFILE=/dev/stdout
-        export SUPERVISORD_ERRLOGFILE=/dev/stderr
         if ( echo $IMAGE_MODE | egrep -iq zeo );then
             mode=zeo
         else

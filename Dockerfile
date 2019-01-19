@@ -23,7 +23,7 @@ RUN bash -c 'set -ex \
     && apt-get install -qq -y $(grep -vE "^\s*#" /code/apt.txt  | tr "\n" " ") \
     && apt-get clean all && apt-get autoclean \
     && : "project user & workdir" \
-    && useradd -ms /bin/bash plone --uid 1000'
+    && useradd -G daemon -ms /bin/bash plone --uid 1000'
 
 # Add here the buildout containing the plone versions link
 ADD etc/base.cfg /code/etc/
