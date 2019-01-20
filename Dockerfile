@@ -93,6 +93,7 @@ RUN bash -c 'set -ex \
          && rm -rf var/cache/downloads/dist \
           '
 ADD products /code/products/
+ADD local/plone-deploy-common/ local/plone-deploy-common/
 ADD \
     local/plone-deploy-common/prod/init.sh \
     local/plone-deploy-common/prod/docker-initialize.py \
