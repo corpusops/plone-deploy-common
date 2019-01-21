@@ -99,8 +99,8 @@ ADD local/plone-deploy-common/             /code/local/plone-deploy-common/
 ADD products /code/products/
 ADD local/plone-deploy-common/ local/plone-deploy-common/
 ADD \
-    local/plone-deploy-common/prod/init.sh \
-    local/plone-deploy-common/prod/docker-initialize.py \
+    local/plone-deploy-common/sys/init.sh \
+    local/plone-deploy-common/sys/docker-initialize.py \
     /code/init/
 WORKDIR /code
 
