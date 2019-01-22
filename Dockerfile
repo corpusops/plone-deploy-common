@@ -31,15 +31,18 @@ ADD requirements-dev.txt requirements.txt /code/
 RUN bash -c 'set -ex \
     && mkdir -p /code/var/cache/{ui,eggs,develop-eggs,downloads} /data/backup /logs /log \
     && chown plone:plone -R /code /code/var/cache /data /logs /log \
+    && ln -sf $(pwd)/init/init.sh /init.sh \
     && cd /code' \
     && gosu plone:plone bash -c 'set -e \
         && log() { echo "$@">&2; } && vv() { log "$@";"$@"; } \
         && python${PY_VER} -m virtualenv venv --unzip-setuptools \
         && . venv/bin/activate \
-        && python -m pip install -U pip wheel \
-        && python -m pip install -U --no-cache-dir -r ./requirements.txt \
+        && : pip needs to be upgraded alone \
+        && python -m pip install -IU pip \
+        && python -m pip install -U wheel \
+        && python -m pip install -U -r ./requirements.txt \
         && if [[ -n "$BUILD_DEV" ]];then \
-           python -m pip install -U --no-cache-dir \
+           python -m pip install -U \
            -r ./requirements-dev.txt;fi \
         && touch match.cfg && buildouts="$(find *cfg  etc/ -name "*cfg" -type f 2>/dev/null)" \
         && egrep "dist.plone.org/release.*versions.cfg" $buildouts \
@@ -52,7 +55,7 @@ RUN bash -c 'set -ex \
         && installer_url="https://launchpad.net/plone/${PLONE_VERSION_1}/${PLONE_VERSION}/+download/Plone-${PLONE_VERSION}-UnifiedInstaller.tgz" \
         && cd var/cache/ui && vv curl -sSLO "$installer_url" \
         && vv tar xf $(ls) && vv tar xf */*/*cache.tar.bz2 -C .. --strip-components=1 \
-        && cd ../../.. && rm -rf var/cache/ui \
+        && cd ../../.. && rm -rf var/cache/ui ~/.cache/pip \
         '
 
 ADD buildout.cfg buildout-prod.cfg setup.cfg setup.py /code/
@@ -86,12 +89,13 @@ RUN bash -c 'set -ex \
          && cp etc/sys/settings-local-docker.cfg etc/sys/settings-local.cfg \
          && : configuration for lxml support \
          && export XML2_CONFIG=xml2-config XSLT_CONFIG=xslt-config \
-		 && : for wheel support, remove cached dists that would hide wheel releases \
- 		 && find var/cache/downloads/dist/ -name "*tar*" -or -name "*zip*" \
+         && : for wheel support, remove cached dists that would hide wheel releases \
+         && find var/cache/downloads/dist/ -name "*tar*" -or -name "*zip*" \
             | sort | xargs rm -fv \
          && vv buildout bootstrap && vv bin/buildout -N -c $BUILDOUT \
          && rm -rf var/cache/downloads/dist \
-          '
+         '
+ADD local/plone-deploy-common/             /code/local/plone-deploy-common/
 ADD products /code/products/
 ADD local/plone-deploy-common/ local/plone-deploy-common/
 ADD \
@@ -99,5 +103,5 @@ ADD \
     local/plone-deploy-common/prod/docker-initialize.py \
     /code/init/
 WORKDIR /code
-ENTRYPOINT ["/code/init/init.sh"]
-CMD []
+
+CMD "/init.sh"
