@@ -300,7 +300,8 @@ pre() {
     services_setup
     fixperms
 }
-# only display startup logs in pre logs
+# only display startup logs when we start in daemon mode
+# and try to hide most when starting an (eventually interactive) shell.
 if [[ -n $NO_STARTUP_LOGS ]];then pre 2>/dev/null;else pre;fi
 
 if [[ -z "$@" ]]; then
