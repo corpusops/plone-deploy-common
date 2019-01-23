@@ -218,8 +218,12 @@ configure() {
 
 fixperms() {
     if [[ -n $NO_FIXPERMS ]];then return 0;fi
-    chmod 0640         /etc/{crontabs,cron.d}/* /etc/logrotate.d/* /etc/supervisor.d/*
-    chown -R root:root /etc/{crontabs,cron.d}/* /etc/logrotate.d/* /etc/supervisor.d/*
+    for i in /etc/{crontabs,cron.d} /etc/logrotate.d /etc/supervisor.d;do
+        if [ -e $i ];then
+            chmod 0640 $i/*
+            chown -R root:root $i/*
+        fi
+    done
     while read f;do chmod 0755 "$f";done < \
         <(find $FINDPERMS_PERMS_DIRS_CANDIDATES -type d \
           -not \( -perm 0755 \) |sort)
