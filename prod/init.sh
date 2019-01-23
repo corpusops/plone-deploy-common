@@ -6,17 +6,18 @@ TOPDIR=$(pwd)
 
 # now be in stop-on-error mode
 set -e
+# load locales & default env
+# load this first as it resets $PATH
+for i in /etc/environment /etc/default/locale;do
+    if [ -e $i ];then . $i;fi
+done
+
 # load virtualenv if any
 for VENV in ./venv ../venv;do
     if [ -e $VENV ];then . $VENV/bin/activate;break;fi
 done
 # activate shell debug if SDEBUG is set
 if [[ -n $SDEBUG ]];then set -x;fi
-
-# load locales & default env
-for i in /etc/environment /etc/default/locale;do
-    if [ -e $i ];then . $i;fi
-done
 
 DEFAULT_IMAGE_MODE=plone
 export IMAGE_MODE=${IMAGE_MODE:-${DEFAULT_IMAGE_MODE}}
@@ -89,7 +90,7 @@ regen_egg_info() {
 #  shell: Run interactive shell inside container
 _shell() {
     local pre=""
-    local user="$APP_USER"
+    local user="$SHELL_USER"
     if [[ -n $1 ]];then user=$1;shift;fi
     local bargs="$@"
     local NO_VIRTUALENV=${NO_VIRTUALENV-}
@@ -220,8 +221,10 @@ fixperms() {
     if [[ -n $NO_FIXPERMS ]];then return 0;fi
     for i in /etc/{crontabs,cron.d} /etc/logrotate.d /etc/supervisor.d;do
         if [ -e $i ];then
-            chmod 0640 $i/*
-            chown -R root:root $i/*
+            while read f;do
+                chown -R root:root "$f"
+                chmod 0640 "$f"
+            done < <(find "$i" -type f)
         fi
     done
     while read f;do chmod 0755 "$f";done < \
