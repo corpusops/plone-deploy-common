@@ -321,7 +321,7 @@ if [[ -z "$@" ]]; then
             log "Missing: $cfg"
             exit 1
         fi
-        SUPERVISORD_CONFIGS="/etc/supervisor.d/cron $cfg" exec /bin/supervisord.sh
+        SUPERVISORD_CONFIGS="/etc/supervisor.d/cron /etc/supervisor.d/rsyslog $cfg" exec /bin/supervisord.sh
     fi
 else
     if [[ "${1-}" = "shell" ]];then shift;fi
