@@ -31,7 +31,7 @@ ADD requirements-dev.txt requirements.txt /code/
 RUN bash -c 'set -ex \
     && mkdir -p /code/var/cache/{ui,eggs,develop-eggs,downloads} /data/backup /logs /log \
     && chown plone:plone -R /code /code/var/cache /data /logs /log \
-    && ln -sf $(pwd)/init/init.sh /init.sh \
+    && ln -sf $(pwd)/sys/init.sh /init.sh \
     && cd /code' \
     && gosu plone:plone bash -c 'set -e \
         && log() { echo "$@">&2; } && vv() { log "$@";"$@"; } \
@@ -101,7 +101,7 @@ ADD local/plone-deploy-common/ local/plone-deploy-common/
 ADD \
     local/plone-deploy-common/sys/init.sh \
     local/plone-deploy-common/sys/docker-initialize.py \
-    /code/init/
+    /code/sys/
 WORKDIR /code
 
 CMD "/init.sh"
