@@ -65,12 +65,15 @@ cops_plone_docker_env_freeform: |-
 cops_plone_sentry_project: "{{cops_plone_name}}"
 cops_plone_sentry_release: "{{cops_plone_gitref}}"
 cops_plone_sentry_environment: "{{cops_plone_deploy_env}}"
+cops_plone_http_protect_user: "root"
+cops_plone_http_protect_password: "rootroot"
 cops_plone_docker_env_defaults: |-
   PROJECT_DIR={{cops_plone_docker_dir}}/
   PLONE__SITE_PATH={{cops_plone_site_path}}
   PLONE__USER={{cops_plone_admin_user}}
   PLONE__ADMIN_PASSWORD={{cops_plone_admin_pasword}}
   PLONE__ZEO_PACK_KEEP_OLD={{cops_plone_backup_zeopack_keep}}
+  PLONE__HTTP_PROTECT_USER={{cops_plone_http_protect_user}}
   PLONE__HTTP_PROTECT_PASSWORD={{cops_plone_http_protect_password}}
   PLONE__BACKUPS_KEEP={{cops_plone_backup_backups_keep}}
   PLONE__SNAPSHOTBACKUPS_KEEP={{cops_plone_backup_snapshotbackups_keep}}
