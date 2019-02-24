@@ -31,7 +31,7 @@ ADD requirements-dev.txt requirements.txt /code/
 RUN bash -c 'set -ex \
     && mkdir -p /code/var/cache/{ui,eggs,develop-eggs,downloads} /data/backup /logs /log \
     && chown plone:plone -R /code /code/var/cache /data /logs /log \
-    && ln -sf $(pwd)/sys/init.sh /init.sh \
+    && ln -sf $(pwd)/init/init.sh /init.sh \
     && cd /code' \
     && gosu plone:plone bash -c 'set -e \
         && log() { echo "$@">&2; } && vv() { log "$@";"$@"; } \
@@ -95,13 +95,17 @@ RUN bash -c 'set -ex \
          && vv buildout bootstrap && vv bin/buildout -N -c $BUILDOUT \
          && rm -rf var/cache/downloads/dist \
          '
-ADD local/plone-deploy-common/             /code/local/plone-deploy-common/
 ADD products /code/products/
-ADD local/plone-deploy-common/ local/plone-deploy-common/
-ADD \
-    local/plone-deploy-common/sys/init.sh \
-    local/plone-deploy-common/sys/docker-initialize.py \
-    /code/sys/
+ADD sys                        /code/sys
+ADD local/plone-deploy-common/ /code/local/plone-deploy-common/
+RUN bash -exc ': \
+    && mkdir -p /code/init \
+    && find /code -type f -not -user plone \
+    | while read f;do chown plone:plone "$f";done \
+    && cd /code \
+    && cp -frnv /code/local/plone-deploy-common/sys/* sys \
+    && cp -frnv sys/* init'
+
 WORKDIR /code
 
 CMD "/init.sh"
