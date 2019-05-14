@@ -23,14 +23,15 @@ RUN bash -c 'set -ex \
     && apt-get install -qq -y $(grep -vE "^\s*#" /code/apt.txt  | tr "\n" " ") \
     && apt-get clean all && apt-get autoclean \
     && : "project user & workdir" \
-    && useradd -G daemon -ms /bin/bash plone --uid 1000'
+    && if ! (getent passwd plone );then useradd -G daemon -ms /bin/bash plone --uid 1000;fi'
 
 # Add here the buildout containing the plone versions link
 ADD etc/base.cfg /code/etc/
 ADD requirements-dev.txt requirements.txt /code/
+ARG PLONE_UI_BYPASS=
 RUN bash -c 'set -ex \
     && mkdir -p /code/var/cache/{ui,eggs,develop-eggs,downloads} /data/backup /logs /log \
-    && chown plone:plone -R /code /code/var/cache /data /logs /log \
+    && find /code /code/var/cache /data /logs /log -not -user plone|while read f;do chown plone:plone "$f";done \
     && ln -sf $(pwd)/init/init.sh /init.sh \
     && cd /code' \
     && gosu plone:plone bash -c 'set -e \
@@ -53,9 +54,10 @@ RUN bash -c 'set -ex \
         && export PLONE_VERSION_1=$(echo $PLONE_VERSION | sed -re "s/\.[^.]$//g") \
         && : download unversal installer to grab its cache speeding up installs \
         && installer_url="https://launchpad.net/plone/${PLONE_VERSION_1}/${PLONE_VERSION}/+download/Plone-${PLONE_VERSION}-UnifiedInstaller.tgz" \
-        && cd var/cache/ui && vv curl -sSLO "$installer_url" \
+        && if [[ -z "${PLONE_UI_BYPASS-}" ]];then vv curl -sSLO "$installer_url" \
+        && cd var/cache/ui \
         && vv tar xf $(ls) && vv tar xf */*/*cache.tar.bz2 -C .. --strip-components=1 \
-        && cd ../../.. && rm -rf var/cache/ui ~/.cache/pip \
+        && cd ../../.. && rm -rf var/cache/ui ;fi && rm -rf ~/.cache/pip \
         '
 
 ADD buildout.cfg buildout-prod.cfg setup.cfg setup.py /code/
@@ -63,7 +65,7 @@ ADD etc /code/etc/
 ADD src /code/src/
 ADD www /code/www/
 RUN bash -c 'set -ex \
-    && chown -R plone:plone /code/{etc,src,www} /code/*.{py,txt,cfg} \
+    && find /code/{etc,src,www} /code/*.{py,txt,cfg} -not -user plone|while read f;do chown plone:plone "$f";done \
     && cd /code' \
     && gosu plone:plone bash -c 'set -e \
         && log() { echo "$@">&2; } && vv() { log "$@";"$@"; } \
@@ -100,8 +102,7 @@ ADD sys                        /code/sys
 ADD local/plone-deploy-common/ /code/local/plone-deploy-common/
 RUN bash -exc ': \
     && mkdir -p /code/init \
-    && find /code -type f -not -user plone \
-    | while read f;do chown plone:plone "$f";done \
+    && find /code -not -user plone|while read f;do chown plone:plone "$f";done \
     && cd /code \
     && cp -frnv /code/local/plone-deploy-common/sys/* sys \
     && cp -frnv sys/* init'

@@ -67,6 +67,8 @@ cops_plone_sentry_release: "{{cops_plone_gitref}}"
 cops_plone_sentry_environment: "{{cops_plone_deploy_env}}"
 cops_plone_http_protect_user: "root"
 cops_plone_http_protect_password: "rootroot"
+corpusops_plone_ui_bypass: ""
+corpusops_plone_base_image: "corpusops/ubuntu-bare:bionic"
 cops_plone_docker_env_defaults: |-
   PROJECT_DIR={{cops_plone_docker_dir}}/
   PLONE__SITE_PATH={{cops_plone_site_path}}
@@ -102,6 +104,8 @@ cops_plone_dotenv: |-
   CI_COMMIT_SHA={{cops_plone_gitref}}
   PLONE_IMAGE={{ cops_plone_docker_image }}
   PLONE_IMAGE_VERSION={{cops_plone_docker_tag}}
+  PLONE_BASE_IMAGE={{corpusops_plone_base_image}}
+  PLONE_UI_BYPASS={{corpusops_plone_ui_bypass}}
 #
 cops_plone_dotenv_extra: ""
 # free form for params inside dockerenv
