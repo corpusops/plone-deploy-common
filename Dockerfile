@@ -29,14 +29,6 @@ RUN bash -c 'set -ex \
 ADD etc/base.cfg /code/etc/
 ADD requirements-dev.txt requirements.txt /code/
 ARG PLONE_UI_BYPASS=
-ARG VSCODE_VERSION=
-ARG PYCHARM_VERSION=
-ENV VSCODE_VERSION=$VSCODE_VERSION
-ENV PYCHARM_VERSION=$PYCHARM_VERSION
-ARG WITH_VSCODE=0
-ENV WITH_VSCODE=$WITH_VSCODE
-ARG WITH_PYCHARM=0
-ENV WITH_PYCHARM=$WITH_PYCHARM
 RUN bash -c 'set -ex \
     && mkdir -p /code/var/cache/{ui,eggs,develop-eggs,downloads} /data/backup /logs /log \
     && find /code /code/var/cache /data /logs /log -not -user plone|while read f;do chown plone:plone "$f";done \
@@ -53,8 +45,6 @@ RUN bash -c 'set -ex \
         && if [[ -n "$BUILD_DEV" ]];then \
            python -m pip install -U \
            -r ./requirements-dev.txt;fi \
-        && if [ "x$WITH_VSCODE" = "x1" ];then python -m pip install -U "ptvsd${VSCODE_VERSION}";fi \
-        && if [ "x$WITH_PYCHARM" = "x1" ];then python -m pip install -U "pydevd-pycharm${PYCHARM_VERSION}";fi \
         && touch match.cfg && buildouts="$(find *cfg  etc/ -name "*cfg" -type f 2>/dev/null)" \
         && egrep "dist.plone.org/release.*versions.cfg" $buildouts \
            | sed -re "s|.*release/([^/]+)/.*|\1|" | head -n1 > PLONE_VERSION \
