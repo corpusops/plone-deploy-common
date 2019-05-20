@@ -66,10 +66,12 @@ RUN bash -c 'set -ex \
         && export PLONE_VERSION_1=$(echo $PLONE_VERSION | sed -re "s/\.[^.]$//g") \
         && : download unversal installer to grab its cache speeding up installs \
         && installer_url="https://launchpad.net/plone/${PLONE_VERSION_1}/${PLONE_VERSION}/+download/Plone-${PLONE_VERSION}-UnifiedInstaller.tgz" \
-        && if [[ -z "${PLONE_UI_BYPASS-}" ]];then vv curl -sSLO "$installer_url" \
-        && cd var/cache/ui \
-        && vv tar xf $(ls) && vv tar xf */*/*cache.tar.bz2 -C .. --strip-components=1 \
-        && cd ../../.. && rm -rf var/cache/ui ;fi && rm -rf ~/.cache/pip \
+        && if [[ -z "${PLONE_UI_BYPASS-}" ]];then \
+          vv curl -sSLO "$installer_url" \
+          && cd var/cache/ui \
+          && vv tar xf $(ls) && vv tar xf */*/*cache.tar.bz2 -C .. --strip-components=1 \
+          && cd ../../.. && rm -rf var/cache/ui ;fi \
+        && rm -rf ~/.cache/pip \
         '
 
 ADD buildout.cfg buildout-prod.cfg setup.cfg setup.py /code/
@@ -104,7 +106,7 @@ RUN bash -c 'set -ex \
          && : configuration for lxml support \
          && export XML2_CONFIG=xml2-config XSLT_CONFIG=xslt-config \
          && : for wheel support, remove cached dists that would hide wheel releases \
-         && find var/cache/downloads/dist/ -name "*tar*" -or -name "*zip*" \
+         && ( find var/cache/downloads/dist/ -name "*tar*" -or -name "*zip*" || /bin/true ) \
             | sort | xargs rm -fv \
          && vv buildout bootstrap && vv bin/buildout -N -c $BUILDOUT \
          && rm -rf var/cache/downloads/dist \
