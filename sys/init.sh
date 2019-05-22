@@ -22,6 +22,8 @@ if [[ -n $SDEBUG ]];then set -x;fi
 DEFAULT_IMAGE_MODE=plone
 export IMAGE_MODE=${IMAGE_MODE:-${DEFAULT_IMAGE_MODE}}
 IMAGE_MODES="(zeo|plone|fg)"
+FORCE_BUILDOUT_RUN=${FORCE_BUILDOUT_RUN-}
+BUILDOUT=${BUILDOUT:-buildout.cfg}
 NO_START=${NO_START-}
 NO_FIXPERMS=${NO_FIXPERMS-}
 if [[ -n $@ ]];then
@@ -258,9 +260,22 @@ services_setup() {
             return 0
         fi
     fi
+    if [ ! -e etc/sys/settings-local.cfg ] && [ -e etc/sys/settings-local-docker.cfg ];then
+        ln -sfv settings-local-docker.cfg etc/sys/settings-local.cfg
+    fi
+    # if bin/develop is available and working  and there are missing autocheckouts, get them
+    if [ -e bin/develop ] && \
+        ( gosu plone bin/develop --help &>/dev/null ) && \
+        ( gosu plone bin/develop status 2>&1 | egrep -q '^! ' );then
+        FORCE_BUILDOUT_RUN=1
+    fi
     # if a custom buildout if found, run it
     if [ -e "custom.cfg" ]; then
-        gosu plone buildout -c custom.cfg
+        FORCE_BUILDOUT_RUN=1
+        BUILDOUT=custom.cfg
+    fi
+    if [[ -n $FORCE_BUILDOUT_RUN ]];then
+        gosu plone buildout -c $BUILDOUT
     fi
 }
 
