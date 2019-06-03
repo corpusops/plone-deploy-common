@@ -5,7 +5,6 @@
     path: "{{item}}"
   with_items:
   - "{{cops_plone_dir}}"
-  - "{{cops_plone_dir}}/local/postgresql/data"
   - "{{cops_plone_dir}}/local/backup"
   - "{{cops_plone_dir}}/local/backup/data"
   - "{{cops_plone_dir}}/local/backup/setup"
@@ -19,6 +18,25 @@
     rsync_opts: "{{cops_plone_code_rsync_opts}}"
     set_remote_user: "no"
     #update_opts: '--recursive'
+- stat: {path: "{{cops_plone_code_theme_dir}}/index.html"}
+  delegate_to: "localhost"
+  register: test_cops_plone_theme
+- name: Synchronise theme inside the environment (deleguation)
+  file:
+    state: directory
+    path: "{{cops_plone_theme_dir}}"
+    mode: "2751"
+  when: test_cops_plone_theme.stat.exists
+- name: Synchronise theme inside the environment (deleguation)
+  delegate_to: "localhost"
+  synchronize:
+    compress: false
+    ssh_args: "{{cops_plone_sshargs}}"
+    src: "{{cops_plone_code_theme_dir}}/"
+    dest: "{{cops_plone_theme_dir}}/"
+    rsync_opts: "{{cops_plone_code_theme_rsync_opts}}"
+    set_remote_user: "no"
+  when: test_cops_plone_theme.stat.exists
 - template:
     src: "docker.env"
     dest: "{{cops_plone_dir}}/docker.env"

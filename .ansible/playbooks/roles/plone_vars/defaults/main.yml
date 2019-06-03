@@ -123,3 +123,9 @@ cops_plone_code_rsync_opts: [
     "--exclude", ".tox",
     "--exclude", ".env",
     "--exclude", "docker.env"]
+cops_plone_code_egg_dir: "{{playbook_dir}}/../../src/{{cops_plone_egg.replace('.', '/')}}"
+cops_plone_code_theme_subpath: "theme/static/dist"
+cops_plone_code_theme_dir: "{{cops_plone_code_egg_dir}}/{{cops_plone_code_theme_subpath}}"
+cops_plone_egg_dir: "{{cops_plone_dir}}/src/{{cops_plone_egg.replace('.', '/')}}"
+cops_plone_theme_dir: "{{cops_plone_egg_dir}}/{{cops_plone_code_theme_subpath}}"
+cops_plone_code_theme_rsync_opts: ["-azv", "--delete"]
