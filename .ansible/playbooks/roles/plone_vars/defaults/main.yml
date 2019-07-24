@@ -101,6 +101,7 @@ cops_plone_dotenv: |-
   PLONE_PY_VER={{ cops_plone_py_ver }}
   PLONE_NAME={{ cops_plone_name }}
   COMPOSE_PROJECT_NAME={{cops_plone_composename}}
+  CONTROL_COMPOSE_FILES={{cops_plone_compose_files|join(' ')}}
   CI_COMMIT_SHA={{cops_plone_gitref}}
   PLONE_IMAGE={{ cops_plone_docker_image }}
   PLONE_IMAGE_VERSION={{cops_plone_docker_tag}}
