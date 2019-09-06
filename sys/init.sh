@@ -46,8 +46,11 @@ for i in $TOPDIR/bin $VENV/bin;do
     if [ -e "$i" ];then export PATH=$i:$PATH;fi
 done
 
-# export back the gateway ip as a host
-ip -4 route list match 0/0 | awk '{print $3" host.docker.internal"}' >> /etc/hosts
+# export back the gateway ip as a host if ip is available in container
+if ( ip -4 route list match 0/0 &>/dev/null );then
+    ip -4 route list match 0/0 \
+        | awk '{print $3" host.docker.internal"}' >> /etc/hosts
+fi
 
 # plone variables
 export DATA_DIR="${PLONE__DATA_DIR:-/data}"
