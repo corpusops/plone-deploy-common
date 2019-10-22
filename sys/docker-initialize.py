@@ -30,6 +30,7 @@ class Environment(object):
     def __init__(self, env=os.environ):
         self.env = env
         order = ['root', 'instance']
+        self.image_mode = self.env.get('IMAGE_MODE', 'plone').lower().strip()
         for i in order + [a for a in KNOBS if a not in order]:
             val = self.env.get('{0}{1}'.format(PREFIX, i.upper()), KNOBS[i])
             if i != 'root':
@@ -89,9 +90,12 @@ class Environment(object):
             with open(self.zeoserver_conf, 'w') as cfile:
                 cfile.write(text)
 
-    def sentry(self):
+    def raven_sentry(self):
         """Sentry alerting if any
+        (integration with raven.contrib.zope
         """
+        if self.skip_sentry():
+            return
         conf = []
         text = ''
         for i in [
@@ -105,7 +109,7 @@ class Environment(object):
         sconf = '\n'.join(conf)
         if 'dsn' not in sconf:
             return
-        sconf = SENTRY_TEMPLATE.format(
+        sconf = RAVEN_SENTRY_TEMPLATE.format(
             conf=sconf,
             zopelogpath=self.zopelogpath,
             zopeloglevel=self.env.get('PLONE__SENTRY_ZOPELOGLEVEL', 'INFO')
@@ -114,6 +118,46 @@ class Environment(object):
             text = cfile.read()
             pattern = re.compile(r"<eventlog>.+</eventlog>", re.DOTALL)
             text = re.sub(pattern, sconf, text)
+        with open(self.zope_conf, 'w') as cfile:
+            cfile.write(text)
+
+    def skip_sentry(self):
+        ret = False
+        force_enable = self.env.get('PLONE__SENTRY_ENABLE', '').lower().strip()
+        if (
+            'zeo' in self.image_mode and
+            force_enable in ['f', 'n,', 'false', 'no', '0', '']
+        ):
+            ret = True
+        return ret
+
+    def sentry(self):
+        """Sentry alerting if any
+        (integration with collective.sentry)
+        """
+        if self.skip_sentry():
+            return
+        conf = []
+        text = ''
+        for i in [
+            'SENTRY_DSN', 'SENTRY_PROJECT',
+        ]:
+            val = self.env.get(
+                'PLONE__{0}'.format(i.upper()), '').strip()
+            if i == 'SENTRY_DSN' and not val:
+                return
+            if val:
+                text += '\n {0} {1}\n'.format(i.upper(), val)
+                conf.append('\n{0} {1}'.format(i, val))
+        conf.append('</environment>')
+        sconf = '\n'.join(conf)
+        if 'SENTRY_DSN' not in sconf:
+            return
+        with open(self.zope_conf, 'r') as cfile:
+            text = cfile.read()
+            text = re.sub('^\s*(SENTRY_DSN|SENTRY_PROJECT) .*', '', text, flags=re.M|re.I)
+            pattern = re.compile(r"(<environment>.+)</environment>", re.DOTALL)
+            text = pattern.sub("\\1{0}".format(sconf), text)
         with open(self.zope_conf, 'w') as cfile:
             cfile.write(text)
 
@@ -147,7 +191,8 @@ ZEO_TEMPLATE = """
 """.strip()
 
 
-SENTRY_TEMPLATE = '''
+# Version for raven.contrib.zope
+RAVEN_SENTRY_TEMPLATE = '''
 <eventlog>
 level {zopeloglevel}
 %import raven.contrib.zope
@@ -160,7 +205,6 @@ level {zopeloglevel}
 </sentry>
 </eventlog>
 '''
-
 
 def initialize():
     """ Configure Plone instance as ZEO Client
