@@ -68,6 +68,9 @@ DEFAULT_PLONE_VERSION="{{cookiecutter.plone_ver}}"
 if [ -e PLONE_VERSION ];then DEFAULT_PLONE_VERSION=$(cat PLONE_VERSION);fi
 export PLONE_VERSION=${PLONE_VERSION:-${DEFAULT_PLONE_VERSION}}
 export PLONE_VERSION_1=$(echo $PLONE_VERSION|sed -re "s/\.[^.]$//g")
+
+export SENTRY_OPTIONAL=${SENTRY_OPTIONAL-1}
+
 get_sha_passord="from hashlib import sha1;from binascii import b2a_base64;
 print(b2a_base64(sha1('$PLONE__ADMIN_PASSWORD'.encode('utf-8')).digest()))"
 # in shell mode: deactivate crons
