@@ -67,7 +67,7 @@ cops_plone_sentry_release: "{{cops_plone_gitref}}"
 cops_plone_sentry_environment: "{{cops_plone_deploy_env}}"
 cops_plone_http_protect_user: "root"
 cops_plone_http_protect_password: "rootroot"
-corpusops_plone_ui_bypass: ""
+corpusops_plone_ui_bypass: "1"
 corpusops_plone_base_image: "corpusops/ubuntu-bare:bionic"
 cops_plone_docker_env_defaults: |-
   PROJECT_DIR={{cops_plone_docker_dir}}/

@@ -28,7 +28,7 @@ RUN bash -c 'set -ex \
 # Add here the buildout containing the plone versions link
 ADD etc/base.cfg /code/etc/
 ADD requirements-dev.txt requirements.txt /code/
-ARG PLONE_UI_BYPASS=
+ARG PLONE_UI_BYPASS=1
 ARG VSCODE_VERSION=
 ARG PYCHARM_VERSION=
 ENV VSCODE_VERSION=$VSCODE_VERSION
@@ -66,7 +66,7 @@ RUN bash -c 'set -ex \
         && export PLONE_VERSION_1=$(echo $PLONE_VERSION | sed -re "s/\.[^.]$//g") \
         && : download unversal installer to grab its cache speeding up installs \
         && installer_url="https://launchpad.net/plone/${PLONE_VERSION_1}/${PLONE_VERSION}/+download/Plone-${PLONE_VERSION}-UnifiedInstaller.tgz" \
-        && if [[ -z "${PLONE_UI_BYPASS-}" ]];then \
+        && if [[ -z "${PLONE_UI_BYPASS-1}" ]];then \
           vv curl -sSLO "$installer_url" \
           && cd var/cache/ui \
           && vv tar xf $(ls) && vv tar xf */*/*cache.tar.bz2 -C .. --strip-components=1 \
